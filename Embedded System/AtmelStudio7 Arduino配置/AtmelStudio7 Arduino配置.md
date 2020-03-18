@@ -12,17 +12,17 @@
 
 AtmelStudio7为AVR系列单片机官方开发环境，完全免费，最新版下载地址为：http://www.atmel.com/tools/atmelstudio.aspx
 
-界面如下： ![atmelstudio7](.\pics\atmelstudio7.png)
+界面如下： ![atmelstudio7](./pics/atmelstudio7.png)
 
 AtmelStudio7中整合了ASF向导，能够自动化对工程进行配置，而且提供了大量的示例工程，使用起来非常方便。
 
- ![1](.\pics\1.png)
+ ![1](./pics/1.png)
 
- 新建工程里面有很多选择，也可以打开示例工程。![2](.\pics\2.png)
+ 新建工程里面有很多选择，也可以打开示例工程。![2](./pics/2.png)
 
 在箭头处点击后可以修改芯片型号。
 
- ![3](.\pics\3.png)
+ ![3](./pics/3.png)
 
 按箭头处或者 F7快捷键可以进行工程编译，编译速度非常的快，比Arduino IDE快了几个数量级。
 
@@ -32,7 +32,7 @@ AtmelStudio7中整合了ASF向导，能够自动化对工程进行配置，而�
 
 AtmelStudio7默认支持jtag进行代码烧写、调试，但是AVR单片机正版JTAG非常贵，山寨版只能使用非常低版本的AtmelStudio，所以这种的方案我们可以采用USBASP/USBISP进行代码烧写，但是没法进行代码实时调试。
 
- ![4](.\pics\4.jpg)
+ ![4](./pics/4.jpg)
 
 淘宝10块左右，但要注意默认的是10PIN的，Arduino上默认为6PIN，所以还要买个转接头。
 
@@ -42,7 +42,7 @@ AtmelStudio7默认支持jtag进行代码烧写、调试，但是AVR单片机正�
 
 在windows上烧写AVR单片机需要借助**Avrdude**这个工具，它支持很多协议，所以我们可以在AtmelStudio7中配置用**Avrdude**来将我们编译好的十六进制文件写入Arduino中。Avrdude可以单独在网上下载，如果安装了**Arduino IDE**，里面已经包含了Avrdude，路径为：
 
-> (arduino ide安装文件夹)\hardware\tools\avr\bin\avrdude.exe
+> (arduino ide安装文件夹)/hardware/tools/avr/bin/avrdude.exe
 
 Avrdude可以完成配置熔丝位等高级的功能，所以参数非常的复杂，还好搜索到了一篇相关内容，
 
@@ -50,7 +50,7 @@ http://www.avrfreaks.net/comment/1973631
 
 其实我们也可以参考Arduino IDE的实现方式来进行配置，avrdude的配置参数位于：
 
-> (arduino ide安装文件夹)\hardware\arduino\avr\platform.txt
+> (arduino ide安装文件夹)/hardware/arduino/avr/platform.txt
 
 其中我们在倒数几行的位置可以看到：
 
@@ -62,7 +62,7 @@ http://www.avrfreaks.net/comment/1973631
 
 **熔丝位配置**是个特别需要注意的地方，一定不能乱写，我们也可以参考Arduino IDE的实现方式，各个Arduino 开发板配置文件位于：
 
-> (arduino ide安装文件夹)\hardware\arduino\avr\boards.txt
+> (arduino ide安装文件夹)/hardware/arduino/avr/boards.txt
 
 比如我们搜索Nano我们可以发现：
 
@@ -76,7 +76,7 @@ http://www.avrfreaks.net/comment/1973631
 
 另外一个重要参数就是avrdude的配置文件，就是 -C 参数，这个我们可以采用avrdude默认配置文件，位于：
 
-> (arduino ide安装文件夹)\hardware\tools\avr\etc\avrdude.conf
+> (arduino ide安装文件夹)/hardware/tools/avr/etc/avrdude.conf
 
 
 
@@ -91,11 +91,11 @@ http://www.avrfreaks.net/comment/1973631
 以上我们就搞清了采用命令行利用Avrdude烧写Arduinod 方式，我们可以把其整合到AtmelStudio7界面上，这样可以实现一键烧写代码。
 我们打开AtmelStudio7的 **Tools > External Tools** 菜单
 
- ![7](.\pics\7.png)
+ ![7](./pics/7.png)
 
 如上图
 
- ![8](.\pics\8.png)
+ ![8](./pics/8.png)
 
 然后添加一个命令，特别注意上图箭头的几个地方，其中：
 
@@ -125,11 +125,11 @@ Use Output window选中，这样我们就可以在AtmelStudio7上看到Avrdude�
 
 Command：参数设置为
 
-> D:\\(arduino ide安装文件夹)\hardware\tools\avr\bin\avrdude.exe
+> D://(arduino ide安装文件夹)/hardware/tools/avr/bin/avrdude.exe
 
 Arguments: 参数设置为
 
-> -C "D:\\(arduino ide安装文件夹)\hardware\tools\avr\etc\avrdude.conf" -c usbasp -p atmega328p -b 115200 -Uflash:w:\$(TargetDir)\$(TargetName).hex:i
+> -C "D://(arduino ide安装文件夹)/hardware/tools/avr/etc/avrdude.conf" -c usbasp -p atmega328p -b 115200 -Uflash:w:/$(TargetDir)/$(TargetName).hex:i
 
 请自行根据自身情况对上面参数进行替换，主要需要替换的位置为：
 
@@ -165,7 +165,7 @@ int main (void)
 
 由于我们用的原生C来进行编程，所以我们就不能像Arduino IDE那样通过13号口来调用了，所以我们要查看Arduino Nano的引脚对应图，还好网上很多，如下：
 
- ![9](.\pics\9.jpg)
+ ![9](./pics/9.jpg)
 
 我们发现，D13对应的是PB5，就是B号端口的第6根引脚，
 
@@ -197,7 +197,7 @@ int main (void)
 	========== Build: 1 succeeded or up-to-date, 0 failed, 0 skipped ==========
 然后我们再点击刚才配置好的USBASP按钮，如下图：
 
- ![10](.\pics\10.png)
+ ![10](./pics/10.png)
 
 完后我们发现瞬间就传完了，因为我们之前把传输速度配置成了115200，部分输出信息如下：
 
@@ -206,7 +206,7 @@ avrdude.exe: Device signature = 0x1e950f
 avrdude.exe: NOTE: "flash" memory has been specified, an erase cycle will be performed
 avrdude.exe: erasing chip
 avrdude.exe: warning: cannot set sck period. please check for usbasp firmware update.
-avrdude.exe: reading input file "c:\users\winxo\Documents\Atmel Studio\7.0\MEGA_LED_EXAMPLE1\MEGA_LED_EXAMPLE1\Debug\MEGA_LED_EXAMPLE1.hex"
+avrdude.exe: reading input file "c:/users/winxo/Documents/Atmel Studio/7.0/MEGA_LED_EXAMPLE1/MEGA_LED_EXAMPLE1/Debug/MEGA_LED_EXAMPLE1.hex"
 avrdude.exe: writing flash (158 bytes):
 Writing | ################################################## | 100% 0.15s
 Reading | ################################################## | 100% 0.11s
@@ -254,19 +254,19 @@ https://www.youtube.com/watch?v=zEbSQaQJvHI
 
 添加arduino菜单，其中command内容同上文usbasp一致，
 
-D:\arduino-1.6.9\hardware\tools\avr\bin\avrdude.exe
+D:/arduino-1.6.9/hardware/tools/avr/bin/avrdude.exe
 
 路径替换为你自己的路径，
 
 Arguments内容如下：
 
--C "D:\arduino-1.6.9\hardware\tools\avr\etc\avrdude.conf" **-c arduino** -p atmega328p -b 115200 **-P\\.\pics\COM14** -Uflash:w:$(TargetDir)$(TargetName).hex:i
+-C "D:/arduino-1.6.9/hardware/tools/avr/etc/avrdude.conf" **-c arduino** -p atmega328p -b 115200 **-P//./pics/COM14** -Uflash:w:$(TargetDir)$(TargetName).hex:i
 
 其中加粗部分为修改内容，
 
 其一修改协议为 arduino
 
-其二添加串口-P\\.\pics\COM14 此处要将串口改为自己的串口号。
+其二添加串口-P//./pics/COM14 此处要将串口改为自己的串口号。
 
 就完成了工具的配置。
 
@@ -309,15 +309,15 @@ int main(void)
 > To disable this feature, specify the -D option.
 >
 > avrdude.exe: erasing chip
-> avrdude.exe: reading input file "c:\users\winxo\Documents\Atmel Studio\7.0\GccApplication3\GccApplication3\Debug\GccApplication3.hex"
+> avrdude.exe: reading input file "c:/users/winxo/Documents/Atmel Studio/7.0/GccApplication3/GccApplication3/Debug/GccApplication3.hex"
 > avrdude.exe: writing flash (178 bytes):
 >
 > Writing | ################################################## | 100% 0.04s
 >
 > avrdude.exe: 178 bytes of flash written
-> avrdude.exe: verifying flash memory against c:\users\winxo\Documents\Atmel Studio\7.0\GccApplication3\GccApplication3\Debug\GccApplication3.hex:
-> avrdude.exe: load data flash data from input file c:\users\winxo\Documents\Atmel Studio\7.0\GccApplication3\GccApplication3\Debug\GccApplication3.hex:
-> avrdude.exe: input file c:\users\winxo\Documents\Atmel Studio\7.0\GccApplication3\GccApplication3\Debug\GccApplication3.hex contains 178 bytes
+> avrdude.exe: verifying flash memory against c:/users/winxo/Documents/Atmel Studio/7.0/GccApplication3/GccApplication3/Debug/GccApplication3.hex:
+> avrdude.exe: load data flash data from input file c:/users/winxo/Documents/Atmel Studio/7.0/GccApplication3/GccApplication3/Debug/GccApplication3.hex:
+> avrdude.exe: input file c:/users/winxo/Documents/Atmel Studio/7.0/GccApplication3/GccApplication3/Debug/GccApplication3.hex contains 178 bytes
 > avrdude.exe: reading on-chip flash data:
 >
 > Reading | ################################################## | 100% 0.03s
