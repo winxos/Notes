@@ -396,6 +396,27 @@ ANSI C中有一些预定义宏，可以直接使用
 | __LINE__ | 这会包含当前行号，一个十进制常量。                  |
 | __STDC__ | 当编译器以 ANSI 标准编译时，则定义为 1。            |
 
+#### 奇淫技巧
+
+* QP Framework中有段代码
+
+```python
+#define Q_TRAN(target_)  \
+    ((Q_HSM_UPCAST(me))->temp = Q_STATE_CAST(target_), (QState)Q_RET_TRAN)
+```
+
+使用时
+
+`status_ = Q_TRAN(&Table_paused);`
+
+这个宏利用了c语言中赋值操作 
+
+`a=(b,c);`
+
+实际上会先执行语句b，然后将 c 赋值给 a，
+
+所以上面的宏等价于 先执行了 一个赋值语句，然后再返回了一个返回值。
+
 ### 内存知识
 
 * 内存区间
