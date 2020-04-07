@@ -373,3 +373,150 @@ int main(void)
 当tt1，tt2各自满足任务结束条件时，设置对应信号量，
 当tt1，tt2都完成后，先前处于等待的wait线程满足触发条件，执行下一步任务，线程退出。
 
+#### StateMachine示例
+
+##### rtt_main.c
+
+```c
+#include <rtthread.h>
+
+#define DBG_TAG "main"
+#define DBG_LVL DBG_LOG
+#include <rtdbg.h>
+#include <hlib.h>
+struct rt_mailbox mb;
+char mb_pool[64];
+void mb_push(int n)
+{
+    rt_mb_send(&mb, n);
+}
+__weak_symbol void ticks()
+{
+
+}
+void setup();
+extern HLState *me;
+int main(void)
+{
+    rt_mb_init(&mb,
+                "mbt",                      /* 名称是 mbt */
+                &mb_pool[0],                /* 邮箱用到的内存池是 mb_pool */
+                sizeof(mb_pool) / 4,        /* 邮箱中的邮件数目，因为一封邮件占 4 字节 */
+                RT_IPC_FLAG_FIFO);          /* 采用 FIFO 方式进行线程等待 */
+    struct rt_timer t;
+    rt_timer_init(&t,"tick", ticks,
+                             RT_NULL, 1000,
+                             RT_TIMER_FLAG_PERIODIC);
+    rt_timer_start(&t);
+    LOG_D("Hello RT-Thread!");
+    setup();
+    while (1)
+    {
+        if (rt_mb_recv(&mb, &me->evt, RT_WAITING_FOREVER) == RT_EOK)
+        {
+            hl_state_execute(me);
+        }
+        rt_thread_mdelay(10);
+    }
+    return RT_EOK;
+}
+```
+
+##### app.c
+
+ ```c
+#include <rtthread.h>
+
+#define DBG_TAG "app"
+#define DBG_LVL DBG_LOG
+#include <rtdbg.h>
+#include <hlib.h>
+void mb_push(int n);
+enum {
+    SIG_READY,
+    SIG_TICK
+};
+struct HLLED{
+    HLState super;
+    int a;
+};
+struct HLLED led;
+HLState *me=(HLState *)&led;
+SRET work(HLState *me)
+{
+    LOG_D("work e:%d",me->evt);
+    switch(me->evt)
+    {
+    case SIG_READY:
+        LOG_D("ENTRY %d",((struct HLLED *)me)->a);
+        break;
+    case SIG_TICK:
+        LOG_D("TICK");
+        break;
+    }
+    return SRET_OK;
+}
+SRET init(HLState *me)
+{
+    LOG_D("init e:%d",me->evt);
+    static int n=0;
+    switch(me->evt)
+    {
+    case SIG_TICK:
+        n++;
+        if (n>5) {
+            LOG_D("NEXT");
+            ((struct HLLED *)me)->a =  5;
+            NEXT(work);
+            mb_push(SIG_READY);
+        }
+        break;
+    }
+    return SRET_OK;
+}
+void ticks(void *p)
+{
+    mb_push(SIG_TICK);
+}
+void setup()
+{
+    NEXT(init);
+    mb_push(SIG_READY);
+}
+ ```
+
+##### hl_state.h
+
+```c
+#ifndef INC_HL_STATE_H_
+#define INC_HL_STATE_H_
+#include "typedef.h"
+enum {
+	SRET_OK
+};
+typedef u8 SRET;
+typedef u32 Sig;
+struct HLState;
+typedef SRET (*pFunState)(struct HLState * me);
+struct HLState{
+	pFunState state;
+	Sig evt;
+};
+typedef struct HLState HLState;
+#define NEXT(_target) (me->state = _target)
+void hl_state_execute(HLState * me);
+```
+
+##### hl_state.c
+
+```c
+#include "../inc/hl_state.h"
+void hl_state_execute(HLState * me)
+{
+	if(me->state)
+	{
+		me->state(me);
+	}
+}
+```
+
