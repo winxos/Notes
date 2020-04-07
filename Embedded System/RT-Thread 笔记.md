@@ -152,7 +152,14 @@ rt_err_t rt_event_send(rt_event_t event, rt_uint32_t set);
 rt_err_t rt_event_recv(rt_event_t event, rt_uint32_t set, rt_uint8_t option, 
                                     rt_int32_t timeout, rt_uint32_t* recved);
 ```
+#### 邮箱
+
+#### 消息队列
+
+#### 信号
+
 ### 基础知识
+
 #### 串口UART的使用
 在工程drivers/board.h文件中，开头几行，通过宏定义来开启UART
 例如 
