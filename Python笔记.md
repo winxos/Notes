@@ -413,7 +413,16 @@ image_data = base64.b64decode(message)  # base64 to bytes
 np_image = np.frombuffer(image_data, dtype="uint8")  # bytes to nparray
 image = cv2.imdecode(np_image, cv2.IMREAD_UNCHANGED)  # decode to jpeg
 ```
+### web框架
+
+#### Django
+
+```
+pip install Django
+```
+
 ### 综合示例
+
 #### 通过网络传输摄像头采集视频
 请先pip安装stomp opencv库，安装方法参考前面章节
 ```python
