@@ -520,3 +520,59 @@ void hl_state_execute(HLState * me)
 }
 ```
 
+#### GY-49 I2C操作
+
+```c
+static rt_err_t read_regs(struct rt_i2c_bus_device *bus)
+{
+    struct rt_i2c_msg msgs[4];
+    uint8_t cmd[2]={0x03,0x04};
+    uint8_t b[2]={0};
+    msgs[0].addr = 0x4A;     /* 从机地址 */
+    msgs[0].flags = RT_I2C_WR ;     /* 读标志 */
+    msgs[0].buf = cmd;             /* 读写数据缓冲区指针　*/
+    msgs[0].len = 1;             /* 读写数据字节数 */
+    msgs[1].addr = 0x4A;     /* 从机地址 */
+    msgs[1].flags = RT_I2C_RD | RT_I2C_NO_READ_ACK  ;     /* 读标志 */
+    msgs[1].buf = b;             /* 读写数据缓冲区指针　*/
+    msgs[1].len = 1;             /* 读写数据字节数 */
+    msgs[2].addr = 0x4A;     /* 从机地址 */
+    msgs[2].flags = RT_I2C_WR ;     /* 读标志 */
+    msgs[2].buf = &cmd[1];             /* 读写数据缓冲区指针　*/
+    msgs[2].len = 1;             /* 读写数据字节数 */
+    msgs[3].addr = 0x4A;     /* 从机地址 */
+    msgs[3].flags = RT_I2C_RD | RT_I2C_NO_READ_ACK  ;     /* 读标志 */
+    msgs[3].buf = &b[1];             /* 读写数据缓冲区指针　*/
+    msgs[3].len = 1;             /* 读写数据字节数 */
+    /* 调用I2C设备接口传输数据 */
+    if (rt_i2c_transfer(bus, &msgs,4) == 4)
+    {
+        int e =  (b[0] & 0xF0) >> 4;
+        int m = ((b[0] & 0x0F) << 4) | (b[1] &0x0F);
+        for(uint8_t i=0;i<e;i++)
+        {
+            m=m*2;
+        }
+        int Lux = m * 0.045;
+        log_out(Lux);
+        return RT_EOK;
+    }
+    else
+    {
+        return -RT_ERROR;
+    }
+}
+```
+
+GY-49 为高精度光照传感器，采用MAX44009芯片，采用I2C通信。
+
+设备总线地址0x4A
+
+光照值寄存器0x03, 0x04
+
+i2c时序和数值换算公式和其他寄存器参考芯片手册。
+
+RTT中，最新i2c操作使用rt_i2c_transfer接口。
+
+注意，在时序中可以看出最后一个读操作无应答信号，所以flags加上RT_I2C_NO_READ_ACK。
+
