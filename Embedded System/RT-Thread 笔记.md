@@ -115,7 +115,10 @@ rt_err_t rt_sem_take (rt_sem_t sem, rt_int32_t time);
 rt_err_t rt_sem_trytake(rt_sem_t sem);
 rt_err_t rt_sem_release(rt_sem_t sem);
 ```
+ 注：官方文档提到，中断与线程间的互斥不能采用信号量（锁）的方式，而应采用开关中断的方式。 
+
 #### 互斥量
+
 ```c
 struct rt_mutex
     {
@@ -160,9 +163,34 @@ rt_err_t rt_event_recv(rt_event_t event, rt_uint32_t set, rt_uint8_t option,
 
 ### 基础知识
 
+#### 自动初始化
+
+在rtdef.h头文件中，提供了一些自动初始化接口
+
+```c
+
+/* board init routines will be called in board_init() function */
+#define INIT_BOARD_EXPORT(fn)           INIT_EXPORT(fn, "1")
+
+/* pre/device/component/env/app init routines will be called in init_thread */
+/* components pre-initialization (pure software initilization) */
+#define INIT_PREV_EXPORT(fn)            INIT_EXPORT(fn, "2")
+/* device initialization */
+#define INIT_DEVICE_EXPORT(fn)          INIT_EXPORT(fn, "3")
+/* components initialization (dfs, lwip, ...) */
+#define INIT_COMPONENT_EXPORT(fn)       INIT_EXPORT(fn, "4")
+/* environment initialization (mount disk, ...) */
+#define INIT_ENV_EXPORT(fn)             INIT_EXPORT(fn, "5")
+/* appliation initialization (rtgui application etc ...) */
+#define INIT_APP_EXPORT(fn)             INIT_EXPORT(fn, "6")
+```
+
+比如我们自行编写的模块，便可以使用`INIT_APP_EXPORT`来完成自动初始化，就是说函数会被自动调用。
+
 #### 串口UART的使用
 在工程drivers/board.h文件中，开头几行，通过宏定义来开启UART
 例如 
+
 ```c
 #define BSP_USING_UART1
 #define BSP_USING_UART2
