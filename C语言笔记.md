@@ -539,10 +539,10 @@ free(p);
 
 * 单次引用
 
-为了避免头文件引入多次而造成的一些错误，可以采用#ifdef 的方式或者#pragma的方式实现头文件的单次包含。
+为了避免头文件引入多次而造成的一些错误，可以采用#ifndef 的方式或者#pragma的方式实现头文件的单次包含。
 
 ```c
-#ifdef XXX
+#ifndef XXX
 #define XXX
 ...
 #endif
