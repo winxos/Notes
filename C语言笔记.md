@@ -609,7 +609,132 @@ free(p);
 
 #### 抽象数据类型ADT
 
+利用纯C语言实现OOP需要很高的技巧以及对C语言很深入的理解，网上能找到不少深入的教程，这里不过多说明。
+
+比较好的参考资料：https://www.state-machine.com/doc/AN_OOP_in_C.pdf
+
 #### 链表
+
+```c
+#ifndef INC_H_LIST_H_
+#define INC_H_LIST_H_
+#include "h_def.h"
+
+struct HNode
+{
+	struct HNode* next;
+};
+struct HList
+{
+	struct HNode* head;
+	struct HNode* tail;
+	bool (*add)(struct HList *list, struct HNode* node);
+	bool (*remove)(struct HList *list, struct HNode* node);
+    void (*travel)(struct HList *list, void (*func)(struct HNode* node));
+};
+typedef struct HList HList;
+#define HNODE(x) ((struct HNode *)x)
+void list_init(HList *list);
+#endif /* INC_H_LIST_H_ */
+```
+
+h_list.h
+
+```c
+/*
+ * h_list.c
+ *
+ *  Created on: 2020年4月28日
+ *      Author: winxos
+ */
+#include "../inc/h_list.h"
+static bool list_add(struct HList *list, struct HNode* node)
+{
+    if(list->head==NULL)
+    {
+        list->head=node;
+        list->tail=node;
+    } else{
+        list->tail->next=node;
+        list->tail=node;
+    }
+    return 0;
+}
+
+static bool list_remove(struct HList *list, struct HNode* node)
+{
+    struct HNode* p=list->head;
+    while(p)
+    {
+        if(p->next==node)
+        {
+        	p->next = p->next->next;
+        	break;
+        }
+        p=p->next;
+    }
+    return 0;
+}
+static void list_travel(struct HList *list, void (*func)(struct HNode* node))
+{
+    struct HNode* p=list->head;
+    while(p)
+    {
+        func(p);
+        p=p->next;
+    }
+}
+void list_init(struct HList *list)
+{
+    list->tail=NULL;
+    list->head=NULL;
+    list->add = list_add;
+    list->remove =  list_remove;
+    list->travel = list_travel;
+}
+```
+
+h_list.c
+
+使用方法如下：
+
+1.建立任意名称结构体，第一个元素为`struct HNode super;`
+
+如`struct HDevice`这样
+
+```c
+#define DEVICE_NAME_MAX 7
+struct HDevice{
+	struct HNode super;
+	char name[DEVICE_NAME_MAX+1];
+	void(*init)(struct HDevice*);
+	void(*loop)(struct HDevice*);
+	void(*tick)(struct HDevice*);
+	void* device;
+};
+typedef struct HDevice HDevice;
+```
+
+然后，使用时
+
+```c
+static void _init(struct HNode* node)
+{
+	struct HDevice *device=(struct HDevice *)node;
+	device->init(device);
+}
+void test()
+{
+   	HList devices;
+    list_init(&devices);
+    struct HDevice device;
+    devices.add(&devices,HNODE(device));
+	devices.travel(&devices,_init); 
+}
+```
+
+上面这种将HNode结构体放置于另一个结构体头部，方式实际上可以理解为是一种继承的实现，通过指针的强制转换，就可以实现基类的功能，利用这个特性就实现了C语言的数据结构OOP。
+
 #### 队列
 #### 二叉树
 
