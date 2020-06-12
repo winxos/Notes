@@ -163,7 +163,7 @@ rt_err_t rt_event_recv(rt_event_t event, rt_uint32_t set, rt_uint8_t option,
 
 ### 基础知识
 
-#### 自动初始化
+#### 模块自动加载
 
 在rtdef.h头文件中，提供了一些自动初始化接口
 
@@ -186,6 +186,63 @@ rt_err_t rt_event_recv(rt_event_t event, rt_uint32_t set, rt_uint8_t option,
 ```
 
 比如我们自行编写的模块，便可以使用`INIT_APP_EXPORT`来完成自动初始化，就是说函数会被自动调用。
+
+模块自动加载借用了Linux module_init的实现原理，RTT实现如下：
+
+```c
+#define SECTION(x)                  __attribute__((section(x)))
+
+#define INIT_EXPORT(fn, level)
+            RT_USED const init_fn_t __rt_init_##fn SECTION(".rti_fn."level) = fn
+```
+
+`__attribute__((section(x)))`的操作会将函数编译到特定的段区，
+
+在RT-Thread中，链接文件link.lds中，在SECTIONS中的.text段，有段代码
+
+```asm
+. = ALIGN(4);
+__rt_init_start = .;
+KEEP(*(SORT(.rti_fn*)))
+__rt_init_end = .;
+```
+
+通过INIT_EXPORT 会将函数插入到.rti_fn*段并且排序
+
+在`components.c`文件中，
+
+```c
+static int rti_start(void)
+{
+    return 0;
+}
+INIT_EXPORT(rti_start, "0");
+
+static int rti_board_start(void)
+{
+    return 0;
+}
+INIT_EXPORT(rti_board_start, "0.end");
+```
+
+将`rti_start`和`rti_board_start`插入到了段`rti_fn.`
+
+然后在初始化函数`void rt_components_board_init(void)`中，
+
+```c
+const init_fn_t *fn_ptr;
+
+for (fn_ptr = &__rt_init_rti_board_start; fn_ptr < &__rt_init_rti_board_end; fn_ptr++)
+{
+    (*fn_ptr)();
+}
+```
+
+就将之间的函数都初始化了。
+
+这样的好处是用户编写驱动代码时就可以不用显示的调用初始化函数，只用通过特定的宏将自己的驱动入口插入到特定的段就可以由系统统一初始化了。
+
+Linux中的module_init也是相同的原理。
 
 #### 串口UART的使用
 在工程drivers/board.h文件中，开头几行，通过宏定义来开启UART
