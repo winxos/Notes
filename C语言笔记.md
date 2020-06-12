@@ -390,6 +390,41 @@ int f(int num, ... )
 
 c语言中需要用到此技巧的地方不多，真的有这个需求的时候再自行查阅更详细资料。
 
+宏中可变参数传递示例代码：
+
+```c
+void h_log(const char *fmt, ...);
+
+#ifndef DBG_NAME
+#define DBG_NAME    DBG_TAG
+#endif
+#define _log_line(lvl, fmt, ...)                					\
+    do{                                           					\
+    	h_log("["lvl"/"DBG_NAME"\t]"fmt"\n", ##__VA_ARGS__);     \
+    }                                           					\
+    while (0)
+#define log_e(fmt, ...)      _log_line("E", fmt, ##__VA_ARGS__)
+#define log_d(fmt, ...)      _log_line("D", fmt, ##__VA_ARGS__)
+#define log_i(fmt, ...)      _log_line("I", fmt, ##__VA_ARGS__)
+```
+
+可变参数到va_list转换示例代码：
+
+```c
+#define LOG_BUF_SZ 256
+void h_log(const char *fmt, ...)
+{
+	char buf[LOG_BUF_SZ];
+    va_list ap;
+    va_start(ap, fmt);
+	h_sprintf(buf,fmt,ap);
+	va_end(ap);
+	hlib.log_out(buf);
+}
+```
+
+
+
 ### 宏和预处理
 
 c语言中可以通过#define来定义宏。在预处理阶段，宏会被替换成对应展开内容。
@@ -473,27 +508,43 @@ ANSI C中有一些预定义宏，可以直接使用
 
 所以上面的宏等价于 先执行了 一个赋值语句，然后再返回了一个返回值。
 
+* Linux container_of
+
+```c
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+
+#define container_of(ptr, type, member) ({	    \
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
+	(type *)( (char *)__mptr - offsetof(type,member) );})
+```
+
+功能：根据结构体元素指针找出结构体指针
+
 ### 内存知识
 
 * 内存区间
 
-1. **代码区**
+1. **代码区** .text
 
 存放代码指令，常量。
 
-2. **静态区**
+2. **数据段** .data
 
-存放所有全局变量和静态变量
+存放已经初始化，且不为0的全局变量和静态变量
 
-3. **堆区**
+3. **bss段** .bss
+
+存放所有未初始化的全局变量和静态变量，bss段不会记入可执行文件大小，可执行文件大小由 text和data段构成
+
+4. **堆区**
 
 堆上的内存可以动态申请和释放。
 
+内存申请是通过系统调用brk完成，malloc存在缓存，不用每次都调用brk。
+
 内存释放后，要避免野指针的使用。
 
-堆数据申请后不会自动初始化，需要人为初始化。
-
-4. **栈区**
+5. **栈区**
 
 栈是一种后入先出的结构，常用于函数调用后的数据恢复，存放函数调用，参数，内部变量等。
 
