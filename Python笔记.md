@@ -85,6 +85,59 @@ print(pip._internal.pep425tags.get_supported())
 主要是利用虚拟环境，搭建最小库安装依赖，就能够最大减小发布文件大小
 #### py2exe
 只支持Windows平台
+
+### 源码保护
+
+#### 源码混淆
+
+可以使用在线服务
+
+http://pyob.oxyry.com/
+
+但是源码混淆代码量不大的情况，替换分析起来还是比较容易，意义不是很大。
+
+#### pyc字节文件
+
+pyc是Python脚本编译后形成的字节文件。生成后的pyc文件可以直接**替换**对应的py文件。通过py_compile可以将代码编译为pyc字节文件。编译好后直接替换原文件就可以。
+
+```python
+import py_compile  
+py_compile.compile(file="xxx.py")
+```
+
+字节码文件很容易反编译，通过[uncompyle6](https://github.com/rocky/python-uncompyle6/) 就可以直接得到源码，所以保护性不强。
+
+#### so/pyd 文件
+
+通过cython可以将py转换为c文件，然后再编译为python可以直接调用的动态链接库。so为linux下文件，pyd为windows平台文件。这里以linux平台为例进行使用说明。
+
+1. 安装cython
+
+```shell
+pip3 install cython
+```
+
+2. 确保gcc已经安装
+3. 新建build.py文件
+
+```python
+from distutils.core import setup
+from Cython.Build import cythonize
+setup(ext_modules = cythonize(["m0.py","m1.py"]))
+```
+
+其中m0.py m1.py ... 为需要保护，编译为so文件的源文件。在终端执行
+
+```shell
+python build.py build_ext
+```
+
+会在当前目录生成build/lib.xxxx/文件夹，里面有生成的形如 xx.cpython-yy.so格式文件，将该so文件直接替换原文件即可，python会自动识别。
+
+4. 剩余事项
+
+编译的时候会有很多临时文件，如果觉得不好看，可以自行编写脚本删除，实现自动编译。
+
 ### 基础知识
 #### 字符串格式化
 格式化常见有三种方式
