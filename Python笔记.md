@@ -17,7 +17,14 @@
 trusted-host=mirrors.aliyun.com
 index-url=https://mirrors.aliyun.com/pypi/simple/
 ```
+也可以直接使用命令行先升级pip，然后设置源
+
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U
+
+pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
 #### pip使用
+
 最好采用安装到用户目录方式安装
 `pip3 install --user xxxx`
 注意python3 和python2的安装区别
