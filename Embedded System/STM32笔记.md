@@ -588,6 +588,12 @@ HAL_FLASHEx_Erase(&My_Flash, &PageError);  //调用擦除函数擦除
 
 将芯片擦除，修复问题代码，问题解决。
 
+#### stlink gdb server 模式和OpenOCD模式区别
+
+经过测试，OpenOCD 模式需要接rst引脚，gdbserver模式不需要
+
+gdbserver模式有的时候会出现端口号被占用，无法连接，切换端口号也不行，此时切换到openocd模式可以调试。
+
 #### stm32g系列芯片无法进入调试模式，调试时无法显示源代码
 
 **问题描述**
