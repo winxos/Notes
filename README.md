@@ -30,6 +30,6 @@
 
 [STM32笔记](./EmbeddedSystem/STM32笔记.md)
 
-[RT-Thread 笔记](./EmbeddedSystem/RT-Thread 笔记.md)
+[RT-Thread 笔记](./EmbeddedSystem/RT-Thread笔记.md)
 
 [事件驱动式状态机C语言实现](./EmbeddedSystem/事件驱动式状态机C语言实现.md)
