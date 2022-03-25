@@ -1,15 +1,21 @@
 # 嵌入式软件笔记
-> wvv 20191216
 
+> wvv 20191216
 
 [TOC]
 
 ### STM32
+
 #### STM32命名规则
+
 #### STM32产品线
+
 #### 开发环境搭建
+
 ##### STM32CubeIDE
+
 ##### STM32CubeMonitor
+
 ##### ST-LINK Utility
 
 ### 模块调试经验
@@ -53,88 +59,88 @@ static uint8_t _buf[LCD_BUF_SZ] = { 0 };
 
 void write_byte(uint8_t data)
 {
-	HAL_SPI_Transmit(&hspi1, &data, 1, 0xff);
+    HAL_SPI_Transmit(&hspi1, &data, 1, 0xff);
 }
 void write_cmd(uint8_t data)
 {
-	HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(lcd_dc_GPIO_Port, lcd_dc_Pin, GPIO_PIN_RESET);
-	write_byte(data);
-	HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(lcd_dc_GPIO_Port, lcd_dc_Pin, GPIO_PIN_RESET);
+    write_byte(data);
+    HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_SET);
 }
 void write_data(uint8_t data)
 {
-	HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(lcd_dc_GPIO_Port, lcd_dc_Pin, GPIO_PIN_SET);
-	write_byte(data);
-	HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(lcd_dc_GPIO_Port, lcd_dc_Pin, GPIO_PIN_SET);
+    write_byte(data);
+    HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_SET);
 }
 void lcd5110_reset()
 {
-	HAL_GPIO_WritePin(lcd_rst_GPIO_Port, lcd_rst_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
-	HAL_GPIO_WritePin(lcd_rst_GPIO_Port, lcd_rst_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(lcd_rst_GPIO_Port, lcd_rst_Pin, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(lcd_rst_GPIO_Port, lcd_rst_Pin, GPIO_PIN_SET);
 }
 void lcd5110_refresh()
 {
-	write_cmd(0x40);
-	write_cmd(0x80);
-	HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(lcd_dc_GPIO_Port, lcd_dc_Pin, GPIO_PIN_SET);
-	HAL_SPI_Transmit(&hspi1, _buf, LCD_BUF_SZ, 0xffff);
-	HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_SET);
+    write_cmd(0x40);
+    write_cmd(0x80);
+    HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(lcd_dc_GPIO_Port, lcd_dc_Pin, GPIO_PIN_SET);
+    HAL_SPI_Transmit(&hspi1, _buf, LCD_BUF_SZ, 0xffff);
+    HAL_GPIO_WritePin(lcd_ce_GPIO_Port, lcd_ce_Pin, GPIO_PIN_SET);
 }
 void lcd5110_clear()
 {
-	memset(_buf,0,LCD_BUF_SZ);
+    memset(_buf,0,LCD_BUF_SZ);
 }
 void lcd5110_pixel(uint8_t x, uint8_t y, uint8_t mode)
 {
-	if (x < 0 || x > 83 || y < 0 || y > 47)
-	{
-		return;
-	}
-	if(mode==LCD5110_PIXEL_MODE_PAINT)
-	{
-		_buf[(y >> 3) * 84 + x] |= 1 << (y & 0x07);
-	}
-	else
-	{
-		_buf[(y >> 3) * 84 + x] &=~( 1 << (y & 0x07));
-	}
+    if (x < 0 || x > 83 || y < 0 || y > 47)
+    {
+        return;
+    }
+    if(mode==LCD5110_PIXEL_MODE_PAINT)
+    {
+        _buf[(y >> 3) * 84 + x] |= 1 << (y & 0x07);
+    }
+    else
+    {
+        _buf[(y >> 3) * 84 + x] &=~( 1 << (y & 0x07));
+    }
 }
 void lcd_putchar(char c, uint8_t x, uint8_t y)
 {
-	if (x < 0 || y < 0 || x >= 84 || y >= 6)
-	{
-		return;
-	}
-	const uint8_t *p = &font5x8[(c - ' ') * 5];
-	for (int i = x; (i < x + 5) && i < 84; i++)
-	{
-		_buf[y * 84 + i] = *p;
-		p++;
-	}
+    if (x < 0 || y < 0 || x >= 84 || y >= 6)
+    {
+        return;
+    }
+    const uint8_t *p = &font5x8[(c - ' ') * 5];
+    for (int i = x; (i < x + 5) && i < 84; i++)
+    {
+        _buf[y * 84 + i] = *p;
+        p++;
+    }
 }
 void lcd5110_str(char* str, uint8_t x, uint8_t y)
 {
-	int offset = 0;
-	while (*str)
-	{
-		lcd_putchar(*str, x + offset, y);
-		offset += 6;
-		str++;
-	}
+    int offset = 0;
+    while (*str)
+    {
+        lcd_putchar(*str, x + offset, y);
+        offset += 6;
+        str++;
+    }
 }
 void lcd5110_init()
 {
-	lcd5110_reset();
-	write_cmd(0x21);
-	write_cmd(0x14);	/*bias*/
-	write_cmd(0xba);	/*Vop*/
-	write_cmd(0x20);
-	write_cmd(0x0c);
-	lcd5110_refresh();
+    lcd5110_reset();
+    write_cmd(0x21);
+    write_cmd(0x14);    /*bias*/
+    write_cmd(0xba);    /*Vop*/
+    write_cmd(0x20);
+    write_cmd(0x0c);
+    lcd5110_refresh();
 }
 ```
 
@@ -143,9 +149,11 @@ void lcd5110_init()
 完整代码查看：https://github.com/winxos/stm32_hal_lcd5110_hw_spi
 
 ### 相关技巧
+
 #### 静态库编写和使用
 
 #### 项目文件结构规划
+
 #### 日志系统设计
 
 ```c
@@ -167,12 +175,12 @@ void lcd5110_init()
 #define log_e(fmt, ...) LOG_LINE("E", fmt, ##__VA_ARGS__)
 #define log_d(fmt, ...) LOG_LINE("D", fmt, ##__VA_ARGS__)
 #define log_i(fmt, ...) LOG_LINE("I", fmt, ##__VA_ARGS__)
-#define log_hex(header, data, len) 						\
-		do{												\
-		printf("[%10lu][HEX][]" header "]\r\n", time);	\
-		for(uint8_t i = 0;i<len;i++)printf("%04X ",data[i]);\
-		printf("\r\n");\
-		}while(0)
+#define log_hex(header, data, len)                         \
+        do{                                                \
+        printf("[%10lu][HEX][]" header "]\r\n", time);    \
+        for(uint8_t i = 0;i<len;i++)printf("%04X ",data[i]);\
+        printf("\r\n");\
+        }while(0)
 ```
 
 这个简易的日志系统就可以通过log_e等方式进行可变参数的调用。
@@ -183,11 +191,11 @@ void lcd5110_init()
 static uint8_t _buf[80];
 int _write(int file, char *ptr, int len)
 {
-	while (huart1.gState != HAL_UART_STATE_READY)
-		;
-	memcpy(_buf, ptr, len);
-	HAL_UART_Transmit_DMA(&huart1, _buf, len);
-	return len;
+    while (huart1.gState != HAL_UART_STATE_READY)
+        ;
+    memcpy(_buf, ptr, len);
+    HAL_UART_Transmit_DMA(&huart1, _buf, len);
+    return len;
 }
 ```
 
@@ -204,50 +212,50 @@ int _write(int file, char *ptr, int len)
 ```c
 void delay_us(uint16_t us)
 {
-	TIM4->CNT = us;
-	TIM_Cmd(TIM4, ENABLE);
-	while (us > 4)
-	{
-		us = TIM4->CNT;
-	}
-	TIM_Cmd(TIM4, DISABLE);
+    TIM4->CNT = us;
+    TIM_Cmd(TIM4, ENABLE);
+    while (us > 4)
+    {
+        us = TIM4->CNT;
+    }
+    TIM_Cmd(TIM4, DISABLE);
 }
 
 void delay_ms(uint32_t t)
 {
-	for (uint32_t i = 0; i < t; i++)
-	{
-		delay_us(1000);
-	}
+    for (uint32_t i = 0; i < t; i++)
+    {
+        delay_us(1000);
+    }
 }
 /**
  *gpio simulate uart with baud
  */
 void soft_tx_byte(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint32_t baud, uint8_t value)
 {
-	uint16_t delay = 1000000 / baud;
-	GPIO_SetBits(GPIOx, GPIO_Pin); 	//发送起始位
-	GPIO_ResetBits(GPIOx, GPIO_Pin);
-	delay_us(delay);
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		if ((value & (1 << i)) != 0)
-		{
-			GPIO_SetBits(GPIOx, GPIO_Pin);
-		}
-		else
-		{
-			GPIO_ResetBits(GPIOx, GPIO_Pin);
-		}
-		delay_us(delay);
-	}
-	GPIO_SetBits(GPIOx, GPIO_Pin);
-	delay_us(delay);
+    uint16_t delay = 1000000 / baud;
+    GPIO_SetBits(GPIOx, GPIO_Pin);     //发送起始位
+    GPIO_ResetBits(GPIOx, GPIO_Pin);
+    delay_us(delay);
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        if ((value & (1 << i)) != 0)
+        {
+            GPIO_SetBits(GPIOx, GPIO_Pin);
+        }
+        else
+        {
+            GPIO_ResetBits(GPIOx, GPIO_Pin);
+        }
+        delay_us(delay);
+    }
+    GPIO_SetBits(GPIOx, GPIO_Pin);
+    delay_us(delay);
 }
 int __io_putchar(int ch)
 {
-	soft_tx_byte(GPIOC, GPIO_Pin_13, 9600, ch); //log
-	return 0;
+    soft_tx_byte(GPIOC, GPIO_Pin_13, 9600, ch); //log
+    return 0;
 }
 ```
 
@@ -259,10 +267,10 @@ int __io_putchar(int ch)
 typedef void (*pTask)(void*);
 typedef struct
 {
-	pTask task;
-	void *p;
-	uint32_t t;
-	uint32_t cyc;
+    pTask task;
+    void *p;
+    uint32_t t;
+    uint32_t cyc;
 } TaskInfo;
 
 #define TASKS_MAX_COUNT (3)
@@ -272,95 +280,95 @@ static TaskInfo tasks_buf[TASKS_MAX_COUNT] = {0};
  */
 uint8_t async_task_add(pTask task, void *p, uint32_t t)
 {
-	for (uint8_t i = 0; i < TASKS_MAX_COUNT; i++)
-	{
-		if(tasks_buf[i].task == NULL)
-		{
-			tasks_buf[i].task = task;
-			tasks_buf[i].p = p;
-			tasks_buf[i].t = t;
-			tasks_buf[i].cyc = 0;
-			return TRUE;
-		}
-	}
-	return FALSE;
+    for (uint8_t i = 0; i < TASKS_MAX_COUNT; i++)
+    {
+        if(tasks_buf[i].task == NULL)
+        {
+            tasks_buf[i].task = task;
+            tasks_buf[i].p = p;
+            tasks_buf[i].t = t;
+            tasks_buf[i].cyc = 0;
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 /**
  *
  */
 uint8_t repeat_task_add(pTask task, void *p, uint32_t t, uint32_t cyc)
 {
-	for (uint8_t i = 0; i < TASKS_MAX_COUNT; i++)
-	{
-		if(tasks_buf[i].task == NULL)
-		{
-			tasks_buf[i].task = task;
-			tasks_buf[i].p = p;
-			tasks_buf[i].t = t;
-			tasks_buf[i].cyc = cyc;
-			return i;
-		}
-	}
-	return 0xff;
+    for (uint8_t i = 0; i < TASKS_MAX_COUNT; i++)
+    {
+        if(tasks_buf[i].task == NULL)
+        {
+            tasks_buf[i].task = task;
+            tasks_buf[i].p = p;
+            tasks_buf[i].t = t;
+            tasks_buf[i].cyc = cyc;
+            return i;
+        }
+    }
+    return 0xff;
 }
 /**
  *
  */
 uint8_t repeat_task_del(uint8_t id)
 {
-	if(id < TASKS_MAX_COUNT)
-	{
-		tasks_buf[id].task = NULL;
-		return TRUE;
-	}
-	return FALSE;
+    if(id < TASKS_MAX_COUNT)
+    {
+        tasks_buf[id].task = NULL;
+        return TRUE;
+    }
+    return FALSE;
 }
 /**
  *
  */
 void async_task_tick()
 {
-	for (uint8_t i = 0; i < TASKS_MAX_COUNT; i++)
-	{
-		if(tasks_buf[i].task != NULL)
-		{
-			if(tasks_buf[i].t > 0)
-			{
-				tasks_buf[i].t --;
-			}
-		}
-	}
+    for (uint8_t i = 0; i < TASKS_MAX_COUNT; i++)
+    {
+        if(tasks_buf[i].task != NULL)
+        {
+            if(tasks_buf[i].t > 0)
+            {
+                tasks_buf[i].t --;
+            }
+        }
+    }
 }
 /**
  *
  */
 void async_task_run()
 {
-	for (uint8_t i = 0; i < TASKS_MAX_COUNT; i++)
-	{
-		if (tasks_buf[i].task != NULL)
-		{
-			if(tasks_buf[i].t == 0)
-			{
-				tasks_buf[i].task(tasks_buf[i].p);
-				if(tasks_buf[i].cyc != 0)
-				{
-					tasks_buf[i].t = tasks_buf[i].cyc; //repeat
-				}
-				else
-				{
-					tasks_buf[i].task = NULL; //once
-				}
-			}
-		}
-	}
+    for (uint8_t i = 0; i < TASKS_MAX_COUNT; i++)
+    {
+        if (tasks_buf[i].task != NULL)
+        {
+            if(tasks_buf[i].t == 0)
+            {
+                tasks_buf[i].task(tasks_buf[i].p);
+                if(tasks_buf[i].cyc != 0)
+                {
+                    tasks_buf[i].t = tasks_buf[i].cyc; //repeat
+                }
+                else
+                {
+                    tasks_buf[i].task = NULL; //once
+                }
+            }
+        }
+    }
 }
 /**
  *
  */
 void async_task_clear()
 {
-	memset(tasks_buf,0,sizeof(tasks_buf));
+    memset(tasks_buf,0,sizeof(tasks_buf));
 }
 ```
 
@@ -394,82 +402,82 @@ void async_task_clear()
 uint16_t id=0x0601;
 void can_send(uint8_t *data,uint8_t sz)
 {
-	CAN_TxHeaderTypeDef tx_header;
-	uint32_t mail_id;
-	tx_header.RTR = CAN_RTR_DATA;
-	tx_header.IDE = CAN_ID_STD;
-	tx_header.StdId=id;
-	tx_header.TransmitGlobalTime = DISABLE;
-	tx_header.DLC = sz;
-	if (HAL_CAN_AddTxMessage(&hcan, &tx_header, data, &mail_id) != HAL_OK)
-	{
-	   /* Transmission request Error */
-	   Error_Handler();
-	}
+    CAN_TxHeaderTypeDef tx_header;
+    uint32_t mail_id;
+    tx_header.RTR = CAN_RTR_DATA;
+    tx_header.IDE = CAN_ID_STD;
+    tx_header.StdId=id;
+    tx_header.TransmitGlobalTime = DISABLE;
+    tx_header.DLC = sz;
+    if (HAL_CAN_AddTxMessage(&hcan, &tx_header, data, &mail_id) != HAL_OK)
+    {
+       /* Transmission request Error */
+       Error_Handler();
+    }
 }
 void can_ack(uint16_t id)
 {
-	CAN_TxHeaderTypeDef tx_header;
-	uint8_t tx[] = {0x00};
-	uint32_t mail_id;
-	tx_header.RTR = CAN_RTR_REMOTE;
-	tx_header.IDE = CAN_ID_STD;
-	tx_header.StdId=id;
-	tx_header.TransmitGlobalTime = DISABLE;
-	if (HAL_CAN_AddTxMessage(&hcan, &tx_header, tx, &mail_id) != HAL_OK)
-	{
-	   /* Transmission request Error */
-	   Error_Handler();
-	}
+    CAN_TxHeaderTypeDef tx_header;
+    uint8_t tx[] = {0x00};
+    uint32_t mail_id;
+    tx_header.RTR = CAN_RTR_REMOTE;
+    tx_header.IDE = CAN_ID_STD;
+    tx_header.StdId=id;
+    tx_header.TransmitGlobalTime = DISABLE;
+    if (HAL_CAN_AddTxMessage(&hcan, &tx_header, tx, &mail_id) != HAL_OK)
+    {
+       /* Transmission request Error */
+       Error_Handler();
+    }
 }
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-	CAN_RxHeaderTypeDef   rx_header;
-	uint8_t	rx[8];
-	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx) != HAL_OK)
-	{
-	/* Reception Error */
-		Error_Handler();
-	}
-	if ((rx_header.StdId == id) && (rx_header.IDE == CAN_ID_STD) && rx_header.DLC == 2)
-	{
-		if(rx[0]==0x01)
-		{
-			HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, rx[1]);
-			can_ack(0x602);
-		}
-	}
+    CAN_RxHeaderTypeDef   rx_header;
+    uint8_t    rx[8];
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx) != HAL_OK)
+    {
+    /* Reception Error */
+        Error_Handler();
+    }
+    if ((rx_header.StdId == id) && (rx_header.IDE == CAN_ID_STD) && rx_header.DLC == 2)
+    {
+        if(rx[0]==0x01)
+        {
+            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, rx[1]);
+            can_ack(0x602);
+        }
+    }
 }
 void setup()
 {
-	CAN_FilterTypeDef  sFilterConfig;
-	sFilterConfig.FilterBank = 0;
-	sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
-	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
-//	sFilterConfig.FilterIdHigh = 0x601<<5;
-	sFilterConfig.FilterIdHigh = 0x0000;
-	sFilterConfig.FilterIdLow = 0x0000;
-	sFilterConfig.FilterMaskIdHigh = 0x0000;
-	sFilterConfig.FilterMaskIdLow = 0x0000;
-	sFilterConfig.FilterFIFOAssignment = CAN_FILTER_FIFO0;
-	sFilterConfig.FilterActivation = ENABLE;
+    CAN_FilterTypeDef  sFilterConfig;
+    sFilterConfig.FilterBank = 0;
+    sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
+    sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
+//    sFilterConfig.FilterIdHigh = 0x601<<5;
+    sFilterConfig.FilterIdHigh = 0x0000;
+    sFilterConfig.FilterIdLow = 0x0000;
+    sFilterConfig.FilterMaskIdHigh = 0x0000;
+    sFilterConfig.FilterMaskIdLow = 0x0000;
+    sFilterConfig.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+    sFilterConfig.FilterActivation = ENABLE;
 
-	if (HAL_CAN_ConfigFilter(&hcan, &sFilterConfig) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	if (HAL_CAN_Start(&hcan) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	if (HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	while(1)
-	{
-		HAL_Delay(1000);
-	}
+    if (HAL_CAN_ConfigFilter(&hcan, &sFilterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    if (HAL_CAN_Start(&hcan) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    if (HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    while(1)
+    {
+        HAL_Delay(1000);
+    }
 }
 ```
 
@@ -480,18 +488,18 @@ void setup()
 ```c
 void hl_uart_send(struct HLUart *up,u8* data,u32 len)
 {
-	HAL_UART_Transmit(up->huart, data, len, 0xffff);/*block sending*/
+    HAL_UART_Transmit(up->huart, data, len, 0xffff);/*block sending*/
 }
 void hl_uart_irq(struct HLUart *up)
 {
-	__HAL_UART_CLEAR_IDLEFLAG((UART_HandleTypeDef*)up->huart);
-	HAL_UART_DMAStop(up->huart);
-	up->rx_buf.len = HL_MSG_SIZE - __HAL_DMA_GET_COUNTER(((UART_HandleTypeDef*)up->huart)->hdmarx);
-	xQueueSendFromISR(up->rxq, &up->rx_buf, NULL);
+    __HAL_UART_CLEAR_IDLEFLAG((UART_HandleTypeDef*)up->huart);
+    HAL_UART_DMAStop(up->huart);
+    up->rx_buf.len = HL_MSG_SIZE - __HAL_DMA_GET_COUNTER(((UART_HandleTypeDef*)up->huart)->hdmarx);
+    xQueueSendFromISR(up->rxq, &up->rx_buf, NULL);
 }
 HLUartOps _uart_ops={
-		.interrupt=hl_uart_irq,
-		.write=hl_uart_send
+        .interrupt=hl_uart_irq,
+        .write=hl_uart_send
 };
 /*
  * create freertos queue,
@@ -504,9 +512,9 @@ HLUartOps _uart_ops={
  * N is the name
  * */
 #define HL_QUEUE_INIT(HANDLE,SZ,TYPE,N) do{\
-	osMessageQDef(N, SZ, TYPE);\
-	HANDLE=osMessageCreate(osMessageQ(N), NULL);\
-	}while(0)
+    osMessageQDef(N, SZ, TYPE);\
+    HANDLE=osMessageCreate(osMessageQ(N), NULL);\
+    }while(0)
 /*
  * create unique name freertos queue,
  * using inner macro __COUNTER__ to create unique named queue each time you called,
@@ -518,41 +526,39 @@ HLUartOps _uart_ops={
 
 void hl_uart_init(void *p)
 {
-	struct HLUart *huart=(struct HLUart*)p;
-	HL_QUEUE_INIT_UNIQUE(huart->rxq,3,struct HLMsg);/*it's very very hard to implementation*/
-	HL_QUEUE_INIT_UNIQUE(huart->txq,2,struct HLMsg);
-	__HAL_UART_ENABLE_IT((UART_HandleTypeDef*)huart->huart,UART_IT_IDLE);
-	HAL_UART_Receive_DMA((UART_HandleTypeDef*)huart->huart,huart->rx_buf.data, HL_MSG_SIZE);
+    struct HLUart *huart=(struct HLUart*)p;
+    HL_QUEUE_INIT_UNIQUE(huart->rxq,3,struct HLMsg);/*it's very very hard to implementation*/
+    HL_QUEUE_INIT_UNIQUE(huart->txq,2,struct HLMsg);
+    __HAL_UART_ENABLE_IT((UART_HandleTypeDef*)huart->huart,UART_IT_IDLE);
+    HAL_UART_Receive_DMA((UART_HandleTypeDef*)huart->huart,huart->rx_buf.data, HL_MSG_SIZE);
 }
 void hl_uart_loop(void *p)
 {
-	struct HLUart *up=(struct HLUart *)p;
-	struct HLMsg t;
-	if (xQueueReceive(up->rxq,&t,0) == pdTRUE)/*received queue*/
-	{
-		HAL_UART_Receive_DMA((UART_HandleTypeDef*)up->huart, up->rx_buf.data, HL_MSG_SIZE);
-		struct HLFunLink * p=up->rxlist;
-		while(p!=NULL)
-		{
-			p->executor(p->device,t.data, t.len);/*call callback link*/
-			p=p->next;
-		}
-	}
-	if (xQueueReceive(up->txq,&t,0) == pdTRUE)/*send queue*/
-	{
-		hl_uart_send(up, t.data, t.len);
-		struct HLFunLink * p=up->txlist;
-		while(p!=NULL)
-		{
-			p->executor(p->device,t.data, t.len);/*call callback link*/
-			p=p->next;
-		}
-	}
+    struct HLUart *up=(struct HLUart *)p;
+    struct HLMsg t;
+    if (xQueueReceive(up->rxq,&t,0) == pdTRUE)/*received queue*/
+    {
+        HAL_UART_Receive_DMA((UART_HandleTypeDef*)up->huart, up->rx_buf.data, HL_MSG_SIZE);
+        struct HLFunLink * p=up->rxlist;
+        while(p!=NULL)
+        {
+            p->executor(p->device,t.data, t.len);/*call callback link*/
+            p=p->next;
+        }
+    }
+    if (xQueueReceive(up->txq,&t,0) == pdTRUE)/*send queue*/
+    {
+        hl_uart_send(up, t.data, t.len);
+        struct HLFunLink * p=up->txlist;
+        while(p!=NULL)
+        {
+            p->executor(p->device,t.data, t.len);/*call callback link*/
+            p=p->next;
+        }
+    }
 }
 struct HLDeviceOps uart_device_ops;
 ```
-
-
 
 ### 疑难问题汇编
 
@@ -607,4 +613,3 @@ gdbserver模式有的时候会出现端口号被占用，无法连接，切换�
 **解决办法**
 
 在ST-LINK Utility中，点击 Target -> Option Bytes，取消nBOOT_SEL的勾选，问题解决。
-
