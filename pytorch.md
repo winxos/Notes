@@ -1,5 +1,7 @@
 # pytorch 笔记
 
+[toc]
+
 ### windows环境搭建
 
 #### 安装anaconda
@@ -79,15 +81,11 @@ https://download.pytorch.org/whl/torch_stable.html
 
 **debug版：** https://download.pytorch.org/libtorch/cu113/libtorch-win-shared-with-deps-debug-1.11.0%2Bcu113.zip
 
-
-
 #### 安装cuda
 
 **官网：** https://developer.nvidia.com/
 
 **cuda toolkit下载地址：** https://developer.nvidia.com/cuda-downloads
-
-
 
 ![torch2.png](./imgs/torch2.png)
 
@@ -101,7 +99,23 @@ https://developer.nvidia.com/rdp/cudnn-download
 
 #### 配置vscode
 
-在windows上开发建议使用vscode，自己网上看教程，配置好相应的环境设置，在python下，记得python解释器要选择虚拟环境中的那个。
+在windows上进行模型训练、python开发，建议使用vscode，自己网上看教程，配置好相应的环境设置，在python下，记得python解释器要选择虚拟环境中的那个。
+
+#### 配置visual studio
+
+在windows上进行模型推理，cpp开发，建议使用visual studio，特别要注意各种工程路径的设置问题。
+
+其中对于cuda运行的坑在于，代码运行时发现cuda设备不可用，但是python环境下是可用的，通过搜索，发现需要在链接器/命令选项中添加
+
+`/INCLUDE:?warp_size@cuda@at@@YAHXZ`
+
+才能够识别cuda设备，对于cuda11.3的版本，可能会发现即使是添加了上面的语句，模型加载没问题了，但是推理的时候会报莫名的错误，经过查阅官网github讨论群才发现，还需要添加
+
+`/INCLUDE:?_torch_cuda_cu_linker_symbol_op_cuda@native@at@@YA?AVTensor@2@AEBV32@@Z `
+
+相当于cuda11.3环境下，上面两处都要添加，中间用空格分开。
+
+个人分析造成这个现象的原因是，torch自己lib导出的时候设置问题，这几个函数未导出为标准c格式，导致函数表未成功导出。
 
 ### 学习资料
 
@@ -114,6 +128,8 @@ https://developer.nvidia.com/rdp/cudnn-download
 * models
 
 * transforms
+
+### 模型基本操作
 
 ### 数据集准备
 
@@ -136,9 +152,27 @@ model.load_state_dict(torch.load(state_dict_path))
 
 * 导出完整模型
 
-
+```python
+torch.save(model, model_out_path)
+```
 
 * 导出trace模型
+  
+  ```python
+  device = torch.device("cuda:0")
+  example = torch.rand(1, 3, 224, 224).cuda()
+  model.set_swish(memory_efficient=False)
+  model.to(device)
+  model.eval()
+  ts = torch.jit.trace(model, example)
+  ts.save('./data/model/w.pt')
+  ```
+
+* 导出onnx模型
+
+```python
+torch.onnx.export(model,example,"data/model/effi.onnx")
+```
 
 ### 模型可视化
 
@@ -146,9 +180,40 @@ model.load_state_dict(torch.load(state_dict_path))
 
 官网： https://netron.app/
 
-
-
 ### 模型推理/部署
+
+#### python 环境
+
+加载jit trace模型, 返回类型是 <class 'torch.jit._script.RecursiveScriptModule'>
+
+```python
+model = torch.jit.load('./data/model/w.pt')
+device = torch.device("cuda:0")
+model.to(device)
+model.eval()
+```
+
+加载图片推理
+
+```python
+input_size = 224
+def recog_img(model, img):
+    trans = transforms.Compose([
+        transforms.Resize(input_size),
+        transforms.CenterCrop(input_size),
+        transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+    ])
+    img_ = trans(img).unsqueeze(0)
+    img_ = img_.cuda()
+    outputs = model(img_)
+    _,ind = torch.max(outputs,1)
+    p = torch.nn.functional.softmax(outputs,dim=1)[0]
+    per = round(p[int(ind)].item(),4)
+    return (int(ind),per)
+```
+
+#### libtorch 环境/cpp
 
 在生产环境中，为了提高性能，很多时候会采用cpp来开发，由于网络结构的构建是语言相关的，为了减少耦合，需要将网络结构和数据都导出为一个自描述的整体，再通过JIT（即时编译）的技术实现加载，这样就减少了系统间的耦合，我们可以在python导出模型的时候导出为jit trace模式或者onnx格式等，然后用cpp来进行加载，推理，一下提供加载jit trace模型示例。
 
