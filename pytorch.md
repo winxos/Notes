@@ -1,6 +1,6 @@
 # pytorch 笔记
 
-[toc]
+[TOC]
 
 ### windows环境搭建
 
@@ -97,11 +97,49 @@ https://developer.nvidia.com/rdp/cudnn-download
 
 初次下载需要免费注册账号，将下载下来的压缩包根据官方安装说明解压到cuda安装目录。
 
-#### 配置vscode
+### windows WSL ubuntu环境安装
+
+#### 安装 pip
+
+默认wsl没有安装pip，通过下面指令安装
+
+```shell
+
+```
+
+#### 安装torch pip方式
+
+官网 https://pytorch.org/get-started/locally/
+
+根据自己需求选择安装，比如linux pip cuda 安装指令如下：
+
+```shell
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+```
+
+在安装完后，torch里面cuda是不能使用的，因为没有安装wsl cuda驱动，安装方式如下。
+
+#### 安装wsl-ubuntu cuda
+
+官网 https://developer.nvidia.com/cuda-downloads
+
+选择Linux ， 里面可以找到WSL-Ubuntu，会自动产生下面安装代码，在wsl中执行即可。
+
+```shell
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
+sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda-repo-wsl-ubuntu-11-7-local_11.7.0-1_amd64.deb
+sudo dpkg -i cuda-repo-wsl-ubuntu-11-7-local_11.7.0-1_amd64.deb
+sudo cp /var/cuda-repo-wsl-ubuntu-11-7-local/cuda-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
+sudo apt-get -y install cuda
+```
+
+### 配置vscode
 
 在windows上进行模型训练、python开发，建议使用vscode，自己网上看教程，配置好相应的环境设置，在python下，记得python解释器要选择虚拟环境中的那个。
 
-#### 配置visual studio
+### 配置visual studio
 
 在windows上进行模型推理，cpp开发，建议使用visual studio，特别要注意各种工程路径的设置问题。
 
