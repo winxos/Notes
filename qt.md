@@ -4,7 +4,12 @@
 
 ### windows 下环境搭建
 
+pip 方式
 
+```shell
+pip install PyQt5
+pip install PyQt5-tools
+```
 
 ### Ubuntu下环境搭建
 
