@@ -4,6 +4,9 @@ https://docs.ai-thinker.com/esp8266/examples/at_demo
 https://docs.ai-thinker.com/%E5%9B%BA%E4%BB%B6%E6%B1%87%E6%80%BB
 
 https://docs.ai-thinker.com/%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91%E8%BD%AF%E4%BB%B6%E8%B5%84%E6%96%99%E5%8F%8A%E5%90%84%E7%B1%BB%E5%BC%80%E5%8F%91%E8%B5%84%E6%96%99
+
+https://docs.ai-thinker.com/%E5%AE%98%E6%96%B9%E6%89%8B%E5%86%8C%E8%B5%84%E6%96%992
+
 ### esp8266系列
 
 esp-15f
